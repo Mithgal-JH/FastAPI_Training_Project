@@ -1,37 +1,24 @@
 from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
-from .. import schemas, models
+from .. import schemas
 from ..database import get_db
-from ..hashing import Hash
-router = APIRouter()
+
+from ..repository import user
+
+router = APIRouter(prefix="/user", tags=["Users"])
 
 
-@router.post(
-    "/user",
-    response_model=schemas.ShowUser,
-    status_code=status.HTTP_201_CREATED,
-    tags=["users"],
-)
+@router.get("/", response_model=List[schemas.User], status_code=status.HTTP_200_OK)
+def get_all(db: Session = Depends(get_db)):
+    return user.get_all(db=db)
+
+
+@router.post("/", response_model=schemas.ShowUser, status_code=status.HTTP_201_CREATED)
 def create_user(request: schemas.User, db: Session = Depends(get_db)):
-    new_user = models.User(
-        name=request.name,
-        email=request.email,
-        password=Hash.hash_password(request.password),
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+    return user.create(request=request, db=db)
 
 
-@router.get("/user/{id}", status_code=200, response_model=schemas.ShowUser, tags=["users"])
+@router.get("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.ShowUser)
 def show_user(id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == id).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user with id {id} is not available",
-        )
-    return user
+    return user.get_user(id=id, db=db)
