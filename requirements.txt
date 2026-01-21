@@ -3,3 +3,5 @@ sqlalchemy
 uvicorn
 pwdlib
 argon2-cffi
+PyJWT
+python-multipart

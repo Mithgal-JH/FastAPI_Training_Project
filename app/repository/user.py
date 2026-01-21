@@ -8,7 +8,7 @@ def create(request: schemas.User, db: Session):
     new_user = models.User(
         name=request.name,
         email=request.email,
-        password=Hash.hash_password(request.password),
+        password=Hash.get_password_hash(request.password),
     )
     db.add(new_user)
     db.commit()
